@@ -223,6 +223,19 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
         { background: true },
       );
       try {
+        if (process.env.EXPECT_UI_LOCALE) {
+          const locale = await waitFor(
+            () => popup.evaluate(
+              "chrome.i18n?.getMessage('@@ui_locale') || null",
+            ),
+            5_000,
+            "extension UI locale",
+          );
+          assert.match(
+            locale,
+            new RegExp(`^${process.env.EXPECT_UI_LOCALE}(?:[_-]|$)`, "i"),
+          );
+        }
         const expectedHeader = await popup.evaluate(
           "chrome.i18n.getMessage('headerSending')",
         );
