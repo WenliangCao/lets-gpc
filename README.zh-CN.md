@@ -6,9 +6,43 @@
 
 [English](README.md) | **简体中文**
 
-一个面向 Chrome 145+ 的零依赖 Manifest V3 扩展：以极低运行开销实现 Global Privacy Control 信号、明确的顶层站点例外和 Chrome Topics 退出。
+一个面向 Chrome 145+ 的零依赖 Manifest V3 扩展：把一个清晰的隐私偏好转换成小巧、可审计的浏览器信号——Global Privacy Control、明确的顶层站点例外，以及 Chrome Topics 退出。
 
 Let's GPC 尚未发布到 Chrome Web Store。你可以从 [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases) 下载最新安装包，或直接加载源码目录。
+
+## 什么是 GPC？
+
+Global Privacy Control（GPC，全局隐私控制）是一种标准化的表达方式，让用户告诉网站和服务：**请不要把我的个人信息出售或共享给第三方，也不要把它用于跨上下文的定向广告。**
+
+它的信号本身很简单：
+
+- HTTP 请求携带 `Sec-GPC: 1`。
+- 页面 JavaScript 可以读取 `navigator.globalPrivacyControl === true`。
+- 这是浏览器上下文中的用户偏好，不需要用户在每个网站重新选择一次。
+
+[W3C GPC 规范](https://www.w3.org/TR/gpc/) 将它定义为一种隐私偏好信号；网站和服务需要结合适用法律以及与用户的关系来处理它。它并不会把浏览器变成法律执行系统。
+
+### GPC 不是什么
+
+GPC 不是广告拦截器、Cookie 清理器、同意弹窗自动点击器，也不是删除数据请求。它不保证每个网站都会遵守，也不会自动行使每个司法辖区中的所有隐私权。它负责表达用户意图；接收方再决定自己必须或愿意如何响应。
+
+## 为什么浏览器需要一个插件？
+
+现代网页通常不只有你打开的那个网站，还会组合分析服务、CDN、嵌入式媒体、支付系统、广告技术和其他第三方服务。如果要求用户在每个网站分别寻找并重复设置隐私退出，实际无法长期坚持——W3C 规范把这种负担称为“隐私劳动”。通用信号的意义，就是让一次浏览器级选择可以重复使用。
+
+但用户还需要一个可靠的控制面。网站自己的设置无法为每次导航和子资源请求添加浏览器请求头；页面脚本无法控制浏览器网络栈；只有网络层的开关又不能提供网站可能检查的 DOM 属性。Chrome 扩展 API 正好提供了这几层之间的窄桥：
+
+1. 用一个可见开关在本地记录用户偏好。
+2. 由 Chrome 声明式网络层发送 `Sec-GPC: 1`，每个请求不运行扩展 JavaScript。
+3. 在 `document_start` 的 MAIN world 暴露页面侧的属性（在扩展 API 允许的范围内）。
+4. 使用 Chrome 原生隐私设置在浏览器级关闭 Topics。
+5. 允许用户为某个顶层网站上下文表达不同的偏好。
+
+这就是 Let's GPC 的动机：把浏览器级隐私偏好放到一个地方进行控制和观察，同时让实现小到可以审计，并如实说明 Chrome 扩展做不到的事情。
+
+## 为什么是 Let's GPC？
+
+这个项目有意只专注于信号本身。它不会建立法律合规数据库，不上传浏览数据，不记录完整请求历史，也不下载远程规则。浏览器正常工作时，扩展应该保持安静；只有设置、导航或界面操作需要它时才运行。
 
 ## 功能
 
@@ -75,6 +109,7 @@ Let's GPC 表达的是技术隐私偏好，不提供法律意见或合规保证�
 ## 主要依据
 
 - [W3C Global Privacy Control](https://www.w3.org/TR/gpc/)
+- [Global Privacy Control 项目](https://globalprivacycontrol.org/)
 - [Chrome Declarative Net Request API](https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest)
 - [Chrome Scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting)
 - [Chrome Privacy API](https://developer.chrome.com/docs/extensions/reference/api/privacy)

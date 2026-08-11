@@ -6,9 +6,43 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-A zero-dependency Manifest V3 extension for Chrome 145+ that implements the Global Privacy Control signal, explicit top-level site exceptions, and Chrome Topics opt-out with minimal runtime overhead.
+A zero-dependency Manifest V3 extension for Chrome 145+ that turns one clear privacy preference into a small, auditable browser signal: Global Privacy Control, explicit top-level site exceptions, and Chrome Topics opt-out.
 
 Let's GPC is not yet published in the Chrome Web Store. Download the latest package from [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases), or load the source directory directly.
+
+## What is GPC?
+
+Global Privacy Control (GPC) is a standardized way for a person to tell websites and services: **please do not sell or share my personal information with third parties, and do not use it for cross-context targeted advertising**.
+
+The signal is deliberately simple:
+
+- An HTTP request carries `Sec-GPC: 1`.
+- Page JavaScript can read `navigator.globalPrivacyControl === true`.
+- The preference belongs to the user's browser context, rather than being reselected on every website.
+
+The [W3C GPC specification](https://www.w3.org/TR/gpc/) describes this as a user preference signal that websites and services can process in the context of applicable law and their relationship with the user. It does not turn a browser into a legal enforcement system.
+
+### What GPC is not
+
+GPC is not an ad blocker, cookie cleaner, consent-banner auto-clicker, or data-deletion request. It does not promise that every website will honor the preference, and it does not exercise every privacy right in every jurisdiction. It communicates intent; the recipient determines the response it is required or willing to make.
+
+## Why does a browser need an extension for this?
+
+Modern pages are assembled from the site you opened plus analytics, CDNs, embedded media, payment systems, advertising technology, and other services. Asking a person to find and repeat a privacy opt-out on every site does not scale—the W3C specification calls this kind of burden “privacy labor.” A universal signal exists to make one browser-level choice reusable.
+
+The practical problem is that a user also needs a dependable control surface. A site-level toggle cannot add a browser request header to every navigation and subresource, a page script cannot control the browser's network stack, and a network-only switch does not expose the DOM value websites may inspect. Chrome's extension APIs provide the narrow bridge between these layers:
+
+1. A visible switch records the user's preference locally.
+2. Chrome's declarative network layer sends `Sec-GPC: 1` without running extension JavaScript for every request.
+3. A `document_start` MAIN-world script exposes the page-side value where the extension API permits it.
+4. Chrome's native privacy setting can disable Topics at browser level.
+5. A top-level site exception lets the user express a different preference for a whole browsing context.
+
+That is the motivation for Let's GPC: make a browser-wide privacy preference observable and controllable in one place, while keeping the implementation small enough to inspect and the behavior honest about what a Chrome extension cannot do.
+
+## Why Let's GPC?
+
+The project is intentionally focused on the signal itself. It does not build a legal-compliance database, upload browsing data, inspect full request histories, or download remote rule sets. The extension should be quiet when the browser is browsing and active only when a setting, navigation, or UI action requires it.
 
 ## Features
 
@@ -75,6 +109,7 @@ Licensed under the [Apache License 2.0](LICENSE). It includes an explicit contri
 ## Primary references
 
 - [W3C Global Privacy Control](https://www.w3.org/TR/gpc/)
+- [Global Privacy Control project](https://globalprivacycontrol.org/)
 - [Chrome Declarative Net Request API](https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest)
 - [Chrome Scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting)
 - [Chrome Privacy API](https://developer.chrome.com/docs/extensions/reference/api/privacy)
