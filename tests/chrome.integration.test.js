@@ -627,8 +627,26 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
         resolve();
       });
     });
-    if (chrome.exitCode === null) chrome.kill("SIGKILL");
-    await rm(profile, { recursive: true, force: true });
+    if (chrome.exitCode === null) {
+      chrome.kill("SIGKILL");
+      await new Promise((resolve) => {
+        if (chrome.exitCode !== null) {
+          resolve();
+          return;
+        }
+        const timer = setTimeout(resolve, 2000);
+        chrome.once("exit", () => {
+          clearTimeout(timer);
+          resolve();
+        });
+      });
+    }
+    await rm(profile, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
   }
 });
 
