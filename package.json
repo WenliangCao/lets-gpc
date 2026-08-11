@@ -1,6 +1,6 @@
 {
   "name": "lets-gpc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "A zero-dependency, performance-first Global Privacy Control extension for Chrome.",

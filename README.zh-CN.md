@@ -59,7 +59,7 @@ GPC 不是广告拦截器、Cookie 清理器、同意弹窗自动点击器，也
 
 ## 体积与运行模型
 
-未压缩 Release 为 108,489 B，Release ZIP 为 45,086 B；运行时文本为 83,136 B，打包文件共 20 个，其中包含两种语言和 Apache 许可证声明。
+未压缩 Release 为 110,156 B，Release ZIP 为 47,303 B；运行时文本为 83,136 B，打包文件共 20 个，其中包含两种语言和 Apache 许可证声明。
 
 项目没有 npm 运行时依赖、构建器、source map、远程代码、遥测、广告或远程配置。Chrome 自己执行唯一一条声明式网络规则。事件型 service worker 不监听 `webRequest`、`webNavigation` 或响应事件；仅在安装、启动、设置变更、顶层 URL 变化和 UI 消息时唤醒。
 

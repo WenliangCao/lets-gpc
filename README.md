@@ -59,7 +59,7 @@ The project is intentionally focused on the signal itself. It does not build a l
 
 ## Size and runtime model
 
-The unpacked release is 108,489 B and the release ZIP is 45,086 B. Runtime text is 83,136 B across 20 packaged files, including both locales and the Apache license notices.
+The unpacked release is 110,156 B and the release ZIP is 47,303 B. Runtime text is 83,136 B across 20 packaged files, including both locales and the Apache license notices.
 
 There are no npm runtime dependencies, bundlers, source maps, remote code, telemetry, ads, or remote configuration. Chrome executes the single declarative network rule itself. The event-driven service worker does not subscribe to `webRequest`, `webNavigation`, or response events; it wakes only for installation, startup, setting changes, top-level URL changes, and UI messages.
 
