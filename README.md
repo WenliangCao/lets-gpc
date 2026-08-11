@@ -106,6 +106,10 @@ The project deliberately excludes state-law CSV datasets, legal-compliance scori
 
 Licensed under the [Apache License 2.0](LICENSE). It includes an explicit contributor patent grant and patent-litigation termination provision. Apache-2.0 also permits commercial use and redistribution when its conditions are followed.
 
+## Privacy
+
+Read the public [Let's GPC Privacy Policy](https://wenliangcao.github.io/lets-gpc/). The extension has no telemetry or developer-operated backend; its limited domain records and settings stay in Chrome local storage.
+
 ## Primary references
 
 - [W3C Global Privacy Control](https://www.w3.org/TR/gpc/)

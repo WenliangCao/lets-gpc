@@ -106,6 +106,10 @@ Let's GPC 表达的是技术隐私偏好，不提供法律意见或合规保证�
 
 项目采用 [Apache License 2.0](LICENSE)，包含明确的贡献者专利授权和专利诉讼终止条款。Apache-2.0 同时允许商业使用和重新分发，但必须遵守许可证条件。
 
+## 隐私
+
+请阅读公开的 [Let's GPC 隐私政策](https://wenliangcao.github.io/lets-gpc/)。扩展没有遥测或开发者自建后端；有限的域名记录和设置仅保存在 Chrome 本地存储中。
+
 ## 主要依据
 
 - [W3C Global Privacy Control](https://www.w3.org/TR/gpc/)

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy Policy for the Let's GPC Chrome extension.">
+  <link rel="canonical" href="https://wenliangcao.github.io/lets-gpc/">
+  <title>Let's GPC Privacy Policy</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      --background: #f4f7f5;
+      --surface: #ffffff;
+      --text: #17211c;
+      --muted: #5d6c64;
+      --border: #dbe5df;
+      --accent: #137a55;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #0e1411;
+        --surface: #151d19;
+        --text: #edf5f0;
+        --muted: #a9b7af;
+        --border: #2c3b33;
+        --accent: #64d6a6;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--text); }
+    main {
+      width: min(820px, calc(100% - 32px));
+      margin: 48px auto;
+      padding: clamp(24px, 5vw, 56px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 18px 50px rgb(0 0 0 / 8%);
+    }
+    h1, h2 { line-height: 1.25; }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 6vw, 3rem); }
+    h2 { margin: 36px 0 10px; font-size: 1.25rem; }
+    p, li { color: var(--muted); }
+    strong { color: var(--text); }
+    ul { padding-left: 1.4rem; }
+    a { color: var(--accent); }
+    .meta { margin: 0 0 32px; }
+    .summary {
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--background);
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Let's GPC Privacy Policy</h1>
+    <p class="meta">Effective date: August 11, 2026 · Last updated: August 11, 2026</p>
+
+    <p class="summary"><strong>Short version:</strong> Let's GPC has no developer-operated server, telemetry, analytics, advertising, or remote code. It stores a limited domain list and extension settings locally in Chrome. Nothing is uploaded to the developer.</p>
+
+    <h2>1. Scope and single purpose</h2>
+    <p>This policy applies to the Let's GPC Chrome extension. Its single purpose is to let users express and manage browser-level opt-out privacy preferences by sending Global Privacy Control (GPC), exposing the corresponding page property where Chrome permits it, supporting explicit top-level site exceptions, and optionally disabling Chrome Topics.</p>
+
+    <h2>2. Data handled on your device</h2>
+    <p>To provide its visible domain list and site exceptions, the extension stores the following information in <code>chrome.storage.local</code> on your device:</p>
+    <ul>
+      <li>extension settings, including whether GPC and Topics protection are enabled, the selected theme, and site exceptions;</li>
+      <li>hostnames of top-level websites visited after installation;</li>
+      <li>hostnames of resources already visible through the current page's Resource Timing entries, read only when you open the popup;</li>
+      <li>a last-seen timestamp and simple flags identifying whether a hostname was observed as a page or resource.</li>
+    </ul>
+    <p>For Chrome Web Store disclosure purposes, these locally stored hostnames and timestamps are treated as <strong>Web history</strong>. The extension does not store full URLs, paths, query strings, page text, form data, cookies, passwords, authentication data, personal communications, financial data, health data, or personal identifiers. Automatic domain-history recording is skipped in incognito windows.</p>
+
+    <h2>3. No collection by the developer</h2>
+    <p>The developer does not receive, collect, sell, rent, share, or transfer the locally stored information. The extension has no developer-operated backend, account system, telemetry, crash reporting, analytics, advertising, tracking pixels, or remote configuration.</p>
+
+    <h2>4. Network behavior</h2>
+    <ul>
+      <li>When protection is enabled, Chrome adds <code>Sec-GPC: 1</code> to covered HTTP, HTTPS, and WebSocket requests. This is the extension's user-facing privacy signal.</li>
+      <li>When you open the popup, the extension may request <code>/.well-known/gpc.json</code> from the current website to check its public GPC support declaration. Credentials are omitted, redirects are rejected, and the response is not sent to the developer.</li>
+      <li>These requests go directly from your browser to the relevant website. The extension does not upload its stored domain list or settings with them.</li>
+    </ul>
+    <p>All executable code is included in the submitted extension package. The extension does not download or execute remote JavaScript, WebAssembly, modules, or configuration.</p>
+
+    <h2>5. Retention and user control</h2>
+    <p>The local domain list is capped at 5,000 unique domains. When the cap is reached, the oldest non-exception records may be removed. You can search, export, import, forget individual domains, or clear all domain records and site exceptions from the extension's settings page. Removing the extension also removes its Chrome-managed local extension storage.</p>
+
+    <h2>6. Permission use</h2>
+    <ul>
+      <li><strong>Host access</strong> lets the universal GPC signal apply across websites and supported WebSocket requests.</li>
+      <li><strong>declarativeNetRequestWithHostAccess</strong> lets Chrome apply one declarative <code>Sec-GPC</code> rule without per-request extension JavaScript.</li>
+      <li><strong>privacy</strong> is used only to read, set, or clear Chrome's Topics setting.</li>
+      <li><strong>scripting</strong> registers the packaged page-property script and reads existing Resource Timing hostnames on demand.</li>
+      <li><strong>storage</strong> stores settings, exceptions, and the local domain list on the device.</li>
+    </ul>
+
+    <h2>7. Limited Use</h2>
+    <p>Let's GPC's use of information received from Chrome extension APIs adheres to the Chrome Web Store User Data Policy, including its Limited Use requirements. Information is used only to provide the extension's disclosed user-facing functionality and is never used for advertising, profiling, creditworthiness, lending, or unrelated purposes.</p>
+
+    <h2>8. Policy changes</h2>
+    <p>If the extension's data practices change, this page and the Chrome Web Store disclosures will be updated before the changed behavior is released. The effective date above will also be revised.</p>
+
+    <h2>9. Contact</h2>
+    <p>Questions or privacy requests can be submitted through the project's <a href="https://github.com/WenliangCao/lets-gpc/issues">GitHub issue tracker</a>. The extension's source code is available in the <a href="https://github.com/WenliangCao/lets-gpc">Let's GPC repository</a>.</p>
+
+    <footer>This policy page is hosted by GitHub Pages. Visiting this page is subject to GitHub's own privacy practices. The Let's GPC extension does not contact GitHub during normal operation.</footer>
+  </main>
+</body>
+</html>
