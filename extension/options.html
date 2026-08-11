@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="system">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Let's GPC 设置</title>
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="brand">
+        <img src="icons/icon-48.png" width="38" height="38" alt="">
+        <div>
+          <h1>Let's GPC</h1>
+          <p>少做事，但把核心信号做对。</p>
+        </div>
+      </div>
+      <button id="theme" class="button" type="button">主题：跟随系统</button>
+    </header>
+
+    <main>
+      <section class="panel protection-grid">
+        <div class="setting">
+          <div>
+            <h2>Global Privacy Control</h2>
+            <p>为 HTTP(S) 请求添加 <code>Sec-GPC: 1</code>，并在顶层网页暴露只读 JavaScript 属性。</p>
+          </div>
+          <label class="switch" aria-label="启用 Global Privacy Control">
+            <input id="global-toggle" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div class="setting">
+          <div>
+            <h2>阻止 Chrome Topics</h2>
+            <p id="topics-detail">直接关闭浏览器 Topics API，不修改站点的 Permissions-Policy。</p>
+          </div>
+          <label class="switch" aria-label="阻止 Chrome Topics">
+            <input id="topics-toggle" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel domains-panel">
+        <div class="section-title">
+          <div>
+            <h2>域名列表</h2>
+            <p><span id="domain-count">0</span> 个本地记录；关闭某域名后，它及其子域作为顶层网站时整页不发送 GPC。</p>
+          </div>
+          <div class="actions">
+            <button id="export" class="button" type="button">导出</button>
+            <button id="import" class="button" type="button">导入</button>
+            <button id="clear" class="button danger" type="button">清空</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </div>
+
+        <label class="search">
+          <span>搜索域名</span>
+          <input id="search" type="search" placeholder="example.com" autocomplete="off">
+        </label>
+
+        <div class="domain-head" aria-hidden="true">
+          <span>域名</span>
+          <span>最后记录</span>
+          <span>发送 GPC</span>
+          <span></span>
+        </div>
+        <div id="domain-list" class="domain-list"></div>
+        <p id="empty" class="empty muted">尚无域名记录。</p>
+      </section>
+
+      <section class="panel facts">
+        <h2>边界与隐私</h2>
+        <ul>
+          <li>没有遥测、远程配置、广告或第三方运行时依赖。</li>
+          <li>域名历史仅保存在 Chrome 本地存储；仅在打开弹窗时读取页面已有的资源计时条目。</li>
+          <li>网站的 <code>/.well-known/gpc.json</code> 只在打开弹窗时按需检查；它是支持声明，不是合规证明。</li>
+          <li>Chrome 扩展无法向 Web Worker 注入 <code>WorkerNavigator.globalPrivacyControl</code>；请求头仍由浏览器网络栈添加。</li>
+        </ul>
+      </section>
+
+      <p id="notice" class="notice" role="status" hidden></p>
+      <p id="error" class="notice error" role="alert" hidden></p>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
