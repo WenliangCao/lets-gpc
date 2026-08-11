@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="system">
+<html lang="en" data-theme="system">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Let's GPC 设置</title>
+    <title data-i18n="optionsTitle">Let's GPC Settings</title>
     <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="options.css">
   </head>
@@ -13,10 +13,10 @@
         <img src="icons/icon-48.png" width="38" height="38" alt="">
         <div>
           <h1>Let's GPC</h1>
-          <p>少做事，但把核心信号做对。</p>
+          <p data-i18n="tagline">Do less. Get the core signal right.</p>
         </div>
       </div>
-      <button id="theme" class="button" type="button">主题：跟随系统</button>
+      <button id="theme" class="button" type="button">Theme: System</button>
     </header>
 
     <main>
@@ -24,19 +24,19 @@
         <div class="setting">
           <div>
             <h2>Global Privacy Control</h2>
-            <p>为 HTTP(S) 请求添加 <code>Sec-GPC: 1</code>，并在顶层网页暴露只读 JavaScript 属性。</p>
+            <p data-i18n="gpcDescription">Adds Sec-GPC: 1 to HTTP(S) requests and exposes a read-only JavaScript property on top-level pages.</p>
           </div>
-          <label class="switch" aria-label="启用 Global Privacy Control">
+          <label class="switch" aria-label="Enable Global Privacy Control" data-i18n-aria-label="enableGlobalPrivacyControl">
             <input id="global-toggle" type="checkbox">
             <span></span>
           </label>
         </div>
         <div class="setting">
           <div>
-            <h2>阻止 Chrome Topics</h2>
-            <p id="topics-detail">直接关闭浏览器 Topics API，不修改站点的 Permissions-Policy。</p>
+            <h2 data-i18n="blockTopicsTitle">Block Chrome Topics</h2>
+            <p id="topics-detail" data-i18n="topicsOptionDescription">Disables the browser Topics API directly without modifying a site's Permissions-Policy.</p>
           </div>
-          <label class="switch" aria-label="阻止 Chrome Topics">
+          <label class="switch" aria-label="Block Chrome Topics" data-i18n-aria-label="blockChromeTopics">
             <input id="topics-toggle" type="checkbox">
             <span></span>
           </label>
@@ -46,39 +46,39 @@
       <section class="panel domains-panel">
         <div class="section-title">
           <div>
-            <h2>域名列表</h2>
-            <p><span id="domain-count">0</span> 个本地记录；关闭某域名后，它及其子域作为顶层网站时整页不发送 GPC。</p>
+            <h2 data-i18n="domainList">Domain list</h2>
+            <p><span id="domain-count">0</span> <span data-i18n="domainRecordsDescription">local records. Disabling a domain stops GPC for that domain and its subdomains when visited as a top-level site.</span></p>
           </div>
           <div class="actions">
-            <button id="export" class="button" type="button">导出</button>
-            <button id="import" class="button" type="button">导入</button>
-            <button id="clear" class="button danger" type="button">清空</button>
+            <button id="export" class="button" type="button" data-i18n="exportButton">Export</button>
+            <button id="import" class="button" type="button" data-i18n="importButton">Import</button>
+            <button id="clear" class="button danger" type="button" data-i18n="clearButton">Clear</button>
             <input id="import-file" type="file" accept="application/json,.json" hidden>
           </div>
         </div>
 
         <label class="search">
-          <span>搜索域名</span>
+          <span data-i18n="searchDomains">Search domains</span>
           <input id="search" type="search" placeholder="example.com" autocomplete="off">
         </label>
 
         <div class="domain-head" aria-hidden="true">
-          <span>域名</span>
-          <span>最后记录</span>
-          <span>发送 GPC</span>
+          <span data-i18n="domainColumn">Domain</span>
+          <span data-i18n="lastSeenColumn">Last seen</span>
+          <span data-i18n="sendGpcColumn">Send GPC</span>
           <span></span>
         </div>
         <div id="domain-list" class="domain-list"></div>
-        <p id="empty" class="empty muted">尚无域名记录。</p>
+        <p id="empty" class="empty muted" data-i18n="noDomains">No domains recorded yet.</p>
       </section>
 
       <section class="panel facts">
-        <h2>边界与隐私</h2>
+        <h2 data-i18n="boundariesPrivacy">Boundaries and privacy</h2>
         <ul>
-          <li>没有遥测、远程配置、广告或第三方运行时依赖。</li>
-          <li>域名历史仅保存在 Chrome 本地存储；仅在打开弹窗时读取页面已有的资源计时条目。</li>
-          <li>网站的 <code>/.well-known/gpc.json</code> 只在打开弹窗时按需检查；它是支持声明，不是合规证明。</li>
-          <li>Chrome 扩展无法向 Web Worker 注入 <code>WorkerNavigator.globalPrivacyControl</code>；请求头仍由浏览器网络栈添加。</li>
+          <li data-i18n="privacyFactNoTelemetry">No telemetry, remote configuration, ads, or third-party runtime dependencies.</li>
+          <li data-i18n="privacyFactHistory">Domain history stays in Chrome local storage. Existing resource timing entries are read only when the popup opens.</li>
+          <li data-i18n="privacyFactWellKnown">/.well-known/gpc.json is checked on demand only when the popup opens. It is a support declaration, not proof of compliance.</li>
+          <li data-i18n="privacyFactWorker">Chrome extensions cannot inject WorkerNavigator.globalPrivacyControl into Web Workers. The browser network stack still adds the request header.</li>
         </ul>
       </section>
 

@@ -420,10 +420,10 @@ async function updateBadge(tabId, url, settingsValue) {
     chrome.action.setTitle({
       tabId,
       title: active
-        ? `GPC configured for ${host}`
+        ? chrome.i18n.getMessage("badgeConfigured", host)
         : host && !hostAccess
-          ? `Let's GPC has no site access for ${host}`
-          : "Let's GPC",
+          ? chrome.i18n.getMessage("badgeNoAccess", host)
+          : chrome.i18n.getMessage("extensionName"),
     }),
   ]);
 }

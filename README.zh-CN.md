@@ -1,0 +1,81 @@
+# Let's GPC
+
+[![Release](https://img.shields.io/github/v/release/WenliangCao/lets-gpc)](https://github.com/WenliangCao/lets-gpc/releases)
+[![Tests](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml/badge.svg)](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+[English](README.md) | **简体中文**
+
+一个面向 Chrome 145+ 的零依赖 Manifest V3 扩展：以极低运行开销实现 Global Privacy Control 信号、明确的顶层站点例外和 Chrome Topics 退出。
+
+Let's GPC 尚未发布到 Chrome Web Store。你可以从 [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases) 下载最新安装包，或直接加载源码目录。
+
+## 功能
+
+- 用一条动态 DNR 规则在 Chrome 网络栈设置 `Sec-GPC: 1`，每个请求不执行扩展 JavaScript。
+- 在受支持顶层页面的 `document_start` 阶段，于 MAIN world 暴露 `navigator.globalPrivacyControl === true`。
+- 提供全局和当前站点开关，例外严格按顶层浏览上下文生效。
+- 使用 Chrome 原生 `privacy.websites.topicsEnabled` 设置关闭 Topics，不伪造 `Permissions-Policy` 请求头。
+- 在本地记录访问过的顶层域名；仅在打开弹窗时从已有 Resource Timing 条目读取资源域名。
+- 仅在需要时检查当前 origin 的 `/.well-known/gpc.json`，拒绝重定向，并把它视为支持声明而非合规证明。
+- 支持域名搜索、启用/停用、忘记、清空、严格全量校验的导入，以及队列化实时导出。
+- 通过 Chrome 原生本地化机制支持英文和简体中文。默认语言为英文，界面自动跟随浏览器语言。
+- 支持跟随系统、深色和浅色主题；无痕窗口不自动保存域名历史。
+- 最多保存 5,000 个唯一域名；设置页最多渲染 500 行，但搜索覆盖完整本地列表。
+
+## 体积与运行模型
+
+未压缩 Release 为 108,489 B，Release ZIP 为 45,086 B；运行时文本为 83,136 B，打包文件共 20 个，其中包含两种语言和 Apache 许可证声明。
+
+项目没有 npm 运行时依赖、构建器、source map、远程代码、遥测、广告或远程配置。Chrome 自己执行唯一一条声明式网络规则。事件型 service worker 不监听 `webRequest`、`webNavigation` 或响应事件；仅在安装、启动、设置变更、顶层 URL 变化和 UI 消息时唤醒。
+
+## 本地安装
+
+1. 打开 `chrome://extensions`。
+2. 打开**开发者模式**。
+3. 选择**加载已解压的扩展程序**。
+4. 源码安装请选择仓库的 `extension` 目录；Release 安装请先解压 `lets-gpc.zip`，再选择解压后的目录。
+
+Chrome 145 是最低版本，因为站点例外依赖该版本引入的 `excludedTopDomains`。
+
+## 验证与打包
+
+无需安装依赖：
+
+```sh
+npm test
+npm run package
+```
+
+测试包含纯函数、manifest 检查和真实 Chrome 集成测试，覆盖导航与子资源请求头、页面最早可见的 API 值、顶层站点例外语义、Topics 设置与清除、WebSocket 和 Worker 请求、IPv4/IPv6/localhost、并发设置变更、严格导入、实时导出快照、popup 控件、500 行渲染上限、打包内容、双语键一致性和无远程代码检查。
+
+可用 `CHROME_BINARY` 指定 Chrome/Chromium 路径；设置 `UI_SCREENSHOT_DIR` 可在集成测试中保存真实渲染的 popup 和 options 截图。
+
+## 明确边界
+
+本扩展不会宣称自己等同于浏览器原生实现：
+
+- Manifest V3 无法在 Dedicated、Shared 或 Service Worker 启动前注入 `WorkerNavigator.globalPrivacyControl`；其进入 Chrome 网络栈的网络请求仍会得到请求头。
+- 为保持站点例外语义一致，页面脚本只注入受支持的顶层 HTTP(S) 文档；subframe 的 Navigator 属性不在保证范围内。
+- 全局关闭或顶层站点例外时，扩展不暴露该属性，结果为 `undefined`，而不是完整原生实现应返回的 `false`。
+- 网络规则立即更新，但已经打开的文档需要刷新才能改变页面属性；popup 会提示这种不一致。
+- Chrome 内部页、Web Store、其他扩展页、被用户收窄的站点权限、企业策略或其他扩展都可能阻止或改变最终结果。
+- 有效的 `/.well-known/gpc.json` 只是网站公开声明，不证明某次请求已被依法处理；仅通过重定向发布的声明会有意显示为未知。
+
+Let's GPC 表达的是技术隐私偏好，不提供法律意见或合规保证。
+
+## 设计取舍
+
+项目有意不加入州法律 CSV 数据库、法律合规评分、完整请求/响应日志、远程规则和接收方域名例外。这些功能不是发送 GPC 所必需的，并会增加网络流量、存储写入、权限或信号语义不一致。它比重型隐私仪表盘更聚焦，但对声明的 Chrome GPC 与 Topics 范围是完整的。
+
+## 许可证
+
+项目采用 [Apache License 2.0](LICENSE)，包含明确的贡献者专利授权和专利诉讼终止条款。Apache-2.0 同时允许商业使用和重新分发，但必须遵守许可证条件。
+
+## 主要依据
+
+- [W3C Global Privacy Control](https://www.w3.org/TR/gpc/)
+- [Chrome Declarative Net Request API](https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest)
+- [Chrome Scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting)
+- [Chrome Privacy API](https://developer.chrome.com/docs/extensions/reference/api/privacy)
+- [Chrome Permissions Policy](https://developer.chrome.com/docs/privacy-security/permissions-policy)

@@ -7,11 +7,16 @@ import {
 } from "./core.js";
 import {
   applyTheme,
+  errorText,
   formatDate,
+  localizeDocument,
+  msg,
   nextTheme,
   sendMessage,
   themeLabel,
 } from "./ui.js";
+
+localizeDocument();
 
 const elements = Object.fromEntries(
   [
@@ -41,13 +46,13 @@ void initialize().catch(showError);
 
 elements["global-toggle"].addEventListener("change", async (event) => {
   if (await mutate({ type: "set-global", enabled: event.target.checked })) {
-    showNotice("设置已保存；已打开的页面在下次刷新后使用新信号。", true);
+    showNotice(msg("settingsSaved"), true);
   }
 });
 
 elements["topics-toggle"].addEventListener("change", async (event) => {
   if (await mutate({ type: "set-topics", blocked: event.target.checked })) {
-    showNotice("Topics 设置已更新。", true);
+    showNotice(msg("topicsUpdated"), true);
   }
 });
 
@@ -80,7 +85,7 @@ elements.export.addEventListener("click", async () => {
     anchor.download = `lets-gpc-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
-    showNotice("域名列表已导出。", true);
+    showNotice(msg("exportComplete"), true);
   } catch (error) {
     showError(error);
   } finally {
@@ -95,24 +100,24 @@ elements["import-file"].addEventListener("change", async (event) => {
   const [file] = event.target.files;
   event.target.value = "";
   if (!file) return;
-  if (file.size > 8_000_000) return showError(new Error("备份文件超过 8 MB"));
+  if (file.size > 8_000_000) return showError(new Error(msg("backupTooLarge")));
 
   try {
     const data = JSON.parse(await file.text());
     const result = await sendMessage({ type: "import-data", data });
     await refresh();
-    showNotice(`已验证并导入 ${result.imported} 个域名。`, true);
+    showNotice(msg("importComplete", String(result.imported)), true);
   } catch (error) {
     showError(error);
   }
 });
 
 elements.clear.addEventListener("click", async () => {
-  if (!confirm("清空所有域名记录和站点例外？全局设置将保留。")) return;
+  if (!confirm(msg("confirmClear"))) return;
   try {
     const removed = await sendMessage({ type: "clear-domains" });
     await refresh();
-    showNotice(`已清空 ${removed} 个域名记录。`, true);
+    showNotice(msg("clearComplete", String(removed)), true);
   } catch (error) {
     showError(error);
   }
@@ -128,7 +133,7 @@ elements["domain-list"].addEventListener("change", async (event) => {
       enabled: input.checked,
     });
     await refresh();
-    showNotice("站点例外已更新；刷新相关页面后完全生效。", true);
+    showNotice(msg("exceptionUpdated"), true);
   } catch (error) {
     showError(error);
     await refresh();
@@ -141,7 +146,7 @@ elements["domain-list"].addEventListener("click", async (event) => {
   try {
     await sendMessage({ type: "forget-host", host: button.dataset.host });
     await refresh();
-    showNotice(`已忘记 ${button.dataset.host}。`, true);
+    showNotice(msg("forgotHost", button.dataset.host), true);
   } catch (error) {
     showError(error);
   }
@@ -201,11 +206,11 @@ function render() {
   elements["global-toggle"].checked = settings.enabled;
   elements["topics-toggle"].checked = settings.blockTopics;
   elements["topics-toggle"].disabled = !settings.enabled;
-  elements.theme.textContent = `主题：${themeLabel(settings.theme)}`;
+  elements.theme.textContent = msg("themeCurrent", themeLabel(settings.theme));
   elements["domain-count"].textContent = String(domains.length);
   elements["topics-detail"].textContent = state.topics.blocked
-    ? "Topics API 当前已在浏览器级关闭。"
-    : "Topics API 当前仍可用。";
+    ? msg("topicsCurrentlyBlocked")
+    : msg("topicsCurrentlyAvailable");
   renderDomains();
 }
 
@@ -219,10 +224,13 @@ function renderDomains() {
   elements.empty.hidden = filtered.length > 0
     && filtered.length <= MAX_RENDERED_DOMAINS;
   elements.empty.textContent = !domains.length
-    ? "尚无域名记录。"
+    ? msg("noDomains")
     : !filtered.length
-      ? "没有匹配的域名。"
-      : `显示前 ${MAX_RENDERED_DOMAINS} 个，共 ${filtered.length} 个结果；继续输入以缩小范围。`;
+      ? msg("noMatchingDomains")
+      : msg("showingDomainResults", [
+        String(MAX_RENDERED_DOMAINS),
+        String(filtered.length),
+      ]);
 }
 
 function domainRow(entry) {
@@ -237,17 +245,17 @@ function domainRow(entry) {
   const type = document.createElement("span");
   const inherited = disabledByHost(entry.host, state.settings.disabledHosts);
   type.textContent = inherited && inherited !== entry.host
-    ? `${flagsLabel(entry.flags)} · 受 ${inherited} 覆盖`
+    ? msg("domainCoveredBy", [flagsLabel(entry.flags), inherited])
     : flagsLabel(entry.flags);
   name.append(host, type);
 
   const seen = document.createElement("span");
   seen.className = "last-seen";
-  seen.textContent = entry.lastSeen ? formatDate(entry.lastSeen) : "仅作为例外保存";
+  seen.textContent = entry.lastSeen ? formatDate(entry.lastSeen) : msg("exceptionOnly");
 
   const label = document.createElement("label");
   label.className = "switch";
-  label.setAttribute("aria-label", `${entry.host} 作为顶层网站时发送 GPC`);
+  label.setAttribute("aria-label", msg("sendGpcTopLevel", entry.host));
   const input = document.createElement("input");
   input.type = "checkbox";
   input.dataset.host = entry.host;
@@ -256,7 +264,7 @@ function domainRow(entry) {
     inherited && inherited !== entry.host,
   );
   if (inherited && inherited !== entry.host) {
-    label.title = `请先启用父域 ${inherited}`;
+    label.title = msg("enableParentFirst", inherited);
   }
   label.append(input, document.createElement("span"));
 
@@ -264,17 +272,17 @@ function domainRow(entry) {
   forget.className = "button";
   forget.type = "button";
   forget.dataset.host = entry.host;
-  forget.textContent = "忘记";
+  forget.textContent = msg("forgetButton");
 
   row.append(name, seen, label, forget);
   return row;
 }
 
 function flagsLabel(flags) {
-  if (flags === 3) return "访问页面 · 资源域名";
-  if (flags === 2) return "资源域名";
-  if (flags === 1) return "访问页面";
-  return "站点例外";
+  if (flags === 3) return msg("flagsPageResource");
+  if (flags === 2) return msg("flagsResource");
+  if (flags === 1) return msg("flagsPage");
+  return msg("flagsException");
 }
 
 function setBusy(busy) {
@@ -296,7 +304,7 @@ function showNotice(message, temporary = false) {
 }
 
 function showError(error) {
-  elements.error.textContent = error?.message || String(error);
+  elements.error.textContent = errorText(error);
   elements.error.hidden = false;
   elements.notice.hidden = true;
 }

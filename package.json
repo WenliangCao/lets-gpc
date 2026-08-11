@@ -1,9 +1,10 @@
 {
   "name": "lets-gpc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "A zero-dependency, performance-first Global Privacy Control extension for Chrome.",
+  "license": "Apache-2.0",
   "scripts": {
     "test": "node --test",
     "test:integration": "node --test tests/chrome.integration.test.js",

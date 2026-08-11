@@ -13,6 +13,7 @@ const extensionPath = path.join(root, "extension");
 const chromeBinary = process.env.CHROME_BINARY || (process.platform === "darwin"
   ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
   : null);
+const chromeLanguage = process.env.CHROME_LANGUAGE || "en-US";
 
 test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
   timeout: 30_000,
@@ -139,6 +140,7 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
     "--disable-sync",
     "--enable-unsafe-extension-debugging",
     "--headless=new",
+    `--lang=${chromeLanguage}`,
     "--remote-debugging-pipe",
     `--user-data-dir=${profile}`,
     "--window-size=800,600",
@@ -221,6 +223,12 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
         { background: true },
       );
       try {
+        const expectedHeader = await popup.evaluate(
+          "chrome.i18n.getMessage('headerSending')",
+        );
+        const expectedSupport = await popup.evaluate(
+          "chrome.i18n.getMessage('supportSupported')",
+        );
         const popupState = await waitFor(async () => {
           const value = await popup.evaluate(`({
             domain: document.querySelector("#domain").textContent,
@@ -232,7 +240,7 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
             support: document.querySelector("#support-status").textContent
           })`);
           return value.domain === "127.0.0.1"
-            && value.support === "声明支持 GPC"
+            && value.support === expectedSupport
             ? value
             : null;
         }, 5_000, "popup state");
@@ -241,9 +249,9 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
           error: true,
           global: true,
           site: true,
-          header: "发送 1",
+          header: expectedHeader,
           dom: "true",
-          support: "声明支持 GPC",
+          support: expectedSupport,
         });
         await captureUi(popup, "popup.png");
 
@@ -300,13 +308,16 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
         { background: true },
       );
       try {
+        const expectedSupport = await redirectPopup.evaluate(
+          "chrome.i18n.getMessage('supportUnknown')",
+        );
         const support = await waitFor(async () => {
           const value = await redirectPopup.evaluate(
             "document.querySelector('#support-status').textContent",
           );
-          return value === "未提供有效声明" ? value : null;
+          return value === expectedSupport ? value : null;
         }, 5_000, "redirecting support resource rejection");
-        assert.equal(support, "未提供有效声明");
+        assert.equal(support, expectedSupport);
         assert.equal(
           redirectRequests.some((request) => request.url === "/.well-known/gpc.json"),
           true,
@@ -518,7 +529,12 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
           }, 5_000, "IPv6 popup state");
           assert.equal(popupState.checked, true);
           assert.equal(popupState.disabled, true);
-          assert.match(popupState.detail, /不支持此地址类型/);
+          assert.equal(
+            popupState.detail,
+            await ipv6Popup.evaluate(
+              "chrome.i18n.getMessage('exceptionUnsupportedDetail')",
+            ),
+          );
           assert.equal(popupState.dom, "true");
         } finally {
           await ipv6Popup.close();
@@ -576,7 +592,12 @@ test("Chrome sends Sec-GPC and exposes the page API with working exceptions", {
         }, 5_000, "capped domain list");
         assert.equal(capped.rows, 500);
         assert.equal(capped.noteHidden, false);
-        assert.match(capped.note, /显示前 500 个，共 600 个结果/);
+        assert.equal(
+          capped.note,
+          await cappedOptions.evaluate(
+            "chrome.i18n.getMessage('showingDomainResults', ['500', '600'])",
+          ),
+        );
       } finally {
         await cappedOptions.close();
       }

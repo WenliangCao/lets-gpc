@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="system">
+<html lang="en" data-theme="system">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,61 +13,61 @@
         <img src="icons/icon-32.png" width="28" height="28" alt="">
         <div>
           <strong>Let's GPC</strong>
-          <span id="summary" class="muted">正在读取状态…</span>
+          <span id="summary" class="muted" data-i18n="summaryLoading">Reading status…</span>
         </div>
       </div>
-      <button id="theme" class="icon-button" type="button" aria-label="切换主题" title="切换主题">◐</button>
+      <button id="theme" class="icon-button" type="button" aria-label="Change theme" title="Change theme" data-i18n-aria-label="changeTheme" data-i18n-title="changeTheme">◐</button>
     </header>
 
     <main>
       <section class="master card">
         <div>
-          <strong>隐私信号</strong>
-          <p>GPC 与 Topics 防护</p>
+          <strong data-i18n="privacySignals">Privacy signals</strong>
+          <p data-i18n="gpcTopicsProtection">GPC and Topics protection</p>
         </div>
-        <label class="switch" aria-label="启用隐私信号">
+        <label class="switch" aria-label="Enable privacy signals" data-i18n-aria-label="enablePrivacySignals">
           <input id="global-toggle" type="checkbox">
           <span></span>
         </label>
       </section>
 
       <section id="unsupported" class="card unsupported" hidden>
-        <strong>此页面不支持站点级控制</strong>
-        <p>Chrome 内部页、扩展页、本地文件或当前地址类型不能保存为域名例外；全局网络规则仍可能生效。</p>
+        <strong data-i18n="unsupportedPageTitle">Site controls are unavailable on this page</strong>
+        <p data-i18n="unsupportedPageDescription">Chrome pages, extension pages, local files, and unsupported address types cannot be saved as site exceptions. The global network rule may still apply.</p>
       </section>
 
       <div id="site-content" hidden>
         <section class="card">
           <div class="row top-row">
             <div class="domain-wrap">
-              <span class="eyebrow">当前网站</span>
+              <span class="eyebrow" data-i18n="currentSite">Current site</span>
               <strong id="domain" class="domain"></strong>
             </div>
-            <label class="switch" aria-label="为当前网站发送 GPC">
+            <label class="switch" aria-label="Send GPC for the current site" data-i18n-aria-label="sendGpcCurrentSite">
               <input id="site-toggle" type="checkbox">
               <span></span>
             </label>
           </div>
           <div class="signal-grid">
             <div>
-              <span>请求头（配置）</span>
+              <span data-i18n="requestHeaderConfigured">Request header (configured)</span>
               <output id="header-status" class="status-pill"></output>
             </div>
             <div>
-              <span>页面 API</span>
-              <output id="dom-status" class="status-pill">检测中</output>
+              <span data-i18n="pageApi">Page API</span>
+              <output id="dom-status" class="status-pill" data-i18n="detecting">Detecting</output>
             </div>
           </div>
           <p id="site-detail" class="site-detail muted" hidden></p>
-          <button id="reload" class="button reload" type="button" hidden>刷新页面以完整应用</button>
+          <button id="reload" class="button reload" type="button" hidden data-i18n="reloadToApply">Reload to apply completely</button>
         </section>
 
         <section class="card row">
           <div>
             <strong>Chrome Topics</strong>
-            <p id="topics-detail">浏览器级关闭，不改写网站响应</p>
+            <p id="topics-detail" data-i18n="topicsDefaultDetail">Disabled at browser level without rewriting site responses</p>
           </div>
-          <label class="switch" aria-label="阻止 Chrome Topics">
+          <label class="switch" aria-label="Block Chrome Topics" data-i18n-aria-label="blockChromeTopics">
             <input id="topics-toggle" type="checkbox">
             <span></span>
           </label>
@@ -75,17 +75,17 @@
 
         <details class="card resource-card">
           <summary>
-            <span>页面发现的资源域名</span>
+            <span data-i18n="resourceDomainsTitle">Resource domains found on this page</span>
             <span id="resource-count" class="status-pill">0</span>
           </summary>
-          <p class="muted note">开关设置该域名以后作为顶层网站时的 GPC；不改变当前页面请求。仅按需读取已有 Resource Timing 条目。</p>
+          <p class="muted note" data-i18n="resourceDomainsNote">A switch controls GPC when that domain is visited as a top-level site. It does not change current-page requests. Existing Resource Timing entries are read only on demand.</p>
           <div id="resource-list" class="resource-list"></div>
         </details>
 
         <section class="card support-card">
           <div>
-            <span class="eyebrow">网站声明</span>
-            <strong id="support-status">检查 /.well-known/gpc.json…</strong>
+            <span class="eyebrow" data-i18n="siteDeclaration">Site declaration</span>
+            <strong id="support-status" data-i18n="checkingWellKnown">Checking /.well-known/gpc.json…</strong>
           </div>
           <span id="support-date" class="muted"></span>
         </section>
@@ -95,8 +95,8 @@
     </main>
 
     <footer>
-      <button id="options" class="button" type="button">域名列表与设置</button>
-      <span class="muted">零依赖 · 本地存储</span>
+      <button id="options" class="button" type="button" data-i18n="openOptions">Domain list and settings</button>
+      <span class="muted" data-i18n="localZeroDependency">Zero dependencies · Local storage</span>
     </footer>
 
     <script type="module" src="popup.js"></script>

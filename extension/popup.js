@@ -7,10 +7,15 @@ import {
 } from "./core.js";
 import {
   applyTheme,
+  errorText,
+  localizeDocument,
+  msg,
   nextTheme,
   sendMessage,
   themeLabel,
 } from "./ui.js";
+
+localizeDocument();
 
 const elements = Object.fromEntries(
   [
@@ -186,11 +191,13 @@ function render() {
   const supported = Boolean(state.host);
   const active = state.hostEnabled;
 
-  elements.summary.textContent = settings.enabled ? "保护已启用" : "保护已暂停";
+  elements.summary.textContent = settings.enabled
+    ? msg("protectionEnabled")
+    : msg("protectionPaused");
   elements["global-toggle"].checked = settings.enabled;
   elements.unsupported.hidden = supported;
   elements["site-content"].hidden = !supported;
-  elements.theme.title = `主题：${themeLabel(settings.theme)}`;
+  elements.theme.title = msg("themeCurrent", themeLabel(settings.theme));
 
   if (!supported) return;
 
@@ -207,16 +214,20 @@ function render() {
     && !exceptionUnavailable
     && !missingAccess;
   elements["site-detail"].textContent = exceptionUnavailable
-    ? "当前地址仍使用全局 GPC，但 Chrome 的域名例外 API 不支持此地址类型。"
+    ? msg("exceptionUnsupportedDetail")
     : inherited
-      ? `此站点由父域例外 ${state.disabledBy} 覆盖；请在域名列表中先启用父域。`
+      ? msg("coveredByParentDetail", state.disabledBy)
       : missingAccess
-        ? "Chrome 未授予此站点的访问权限；扩展配置不会在这里生效。"
+        ? msg("siteAccessMissing")
         : "";
   const headerActive = active && state.hostAccess;
   setPill(
     elements["header-status"],
-    headerActive ? "发送 1" : active ? "无站点权限" : "不添加",
+    headerActive
+      ? msg("headerSending")
+      : active
+        ? msg("headerNoAccess")
+        : msg("headerNotAdded"),
     headerActive,
   );
   elements["topics-toggle"].checked = settings.blockTopics;
@@ -225,9 +236,9 @@ function render() {
   const topicsControlled = state.topics.levelOfControl === "controlled_by_this_extension";
   elements["topics-detail"].textContent = state.topics.blocked
     ? topicsControlled
-      ? "已由 Let's GPC 在浏览器级关闭"
-      : "已关闭（可能由浏览器、策略或其他扩展控制）"
-    : "当前未关闭";
+      ? msg("topicsBlockedByExtension")
+      : msg("topicsBlockedElsewhere")
+    : msg("topicsNotBlocked");
 }
 
 function renderPageSnapshot() {
@@ -244,9 +255,9 @@ function renderPageSnapshot() {
   const label = visible
     ? "true"
     : pageSnapshot.gpcType === "undefined"
-      ? "未暴露"
+      ? msg("domNotExposed")
       : pageSnapshot.gpcType === "unavailable"
-        ? "无法检测"
+        ? msg("domUnavailable")
         : "false";
   setPill(elements["dom-status"], label, visible);
 
@@ -258,7 +269,7 @@ function renderPageSnapshot() {
   if (!pageSnapshot.hosts.length) {
     const empty = document.createElement("p");
     empty.className = "muted note";
-    empty.textContent = "当前没有可见的跨域资源条目。";
+    empty.textContent = msg("noCrossOriginResources");
     elements["resource-list"].append(empty);
   }
 }
@@ -273,14 +284,14 @@ function resourceRow(host) {
 
   const label = document.createElement("label");
   label.className = "switch";
-  label.setAttribute("aria-label", `${host} 作为顶层网站时发送 GPC`);
+  label.setAttribute("aria-label", msg("sendGpcTopLevel", host));
   const exceptionSupported = Boolean(normalizeHost(host));
   const inherited = exceptionSupported
     ? disabledByHost(host, state.settings.disabledHosts)
     : null;
-  if (!exceptionSupported) label.title = "此地址类型不支持域名例外";
+  if (!exceptionSupported) label.title = msg("exceptionUnsupportedShort");
   if (inherited && inherited !== host) {
-    label.title = `由父域例外 ${inherited} 覆盖`;
+    label.title = msg("coveredByParentShort", inherited);
   }
 
   const input = document.createElement("input");
@@ -308,14 +319,14 @@ function resourceRow(host) {
 
 function renderSupport(result) {
   const labels = {
-    supported: "声明支持 GPC",
-    unsupported: "声明不支持 GPC",
-    unknown: "未提供有效声明",
+    supported: msg("supportSupported"),
+    unsupported: msg("supportUnsupported"),
+    unknown: msg("supportUnknown"),
   };
   elements["support-status"].textContent = labels[result.kind];
   elements["support-date"].textContent = result.lastUpdate
-    ? `更新 ${result.lastUpdate}`
-    : "支持声明不等于实际合规";
+    ? msg("supportUpdated", result.lastUpdate)
+    : msg("supportNotCompliance");
 }
 
 function setPill(element, text, on) {
@@ -363,7 +374,7 @@ async function readSmallJson(response) {
 }
 
 function showError(error) {
-  elements.error.textContent = error?.message || String(error);
+  elements.error.textContent = errorText(error);
   elements.error.hidden = false;
 }
 
