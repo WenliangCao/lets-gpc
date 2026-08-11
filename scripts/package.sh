@@ -12,6 +12,7 @@ mkdir -p "$output_dir"
 rm -f "$archive"
 cp -R "$project_dir/extension/." "$stage_dir/"
 cp "$project_dir/LICENSE" "$project_dir/NOTICE" "$stage_dir/"
+find "$stage_dir" -exec touch -t 198001010000 {} +
 cd "$stage_dir"
 find . -type f -print | LC_ALL=C sort | zip -q -X "$archive" -@
 unzip -tq "$archive" >/dev/null

@@ -687,7 +687,10 @@ async function openPage(browser, url, targetOptions = {}) {
   const page = await browser.attach(targetId);
   await page.send("Page.enable");
   await waitFor(
-    async () => (await page.evaluate("document.readyState")) === "complete",
+    async () => page.evaluate(`
+      location.href === ${JSON.stringify(url)}
+      && document.readyState === "complete"
+    `),
     5_000,
     `page load: ${url}`,
   );
