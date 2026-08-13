@@ -1,6 +1,8 @@
 # Let's GPC
 
 [![Release](https://img.shields.io/github/v/release/WenliangCao/lets-gpc)](https://github.com/WenliangCao/lets-gpc/releases)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ckmmgmllopcmflfebjhgnchodkdakdig?label=Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig)
+[![Chrome Web Store Users](https://img.shields.io/chrome-web-store/users/ckmmgmllopcmflfebjhgnchodkdakdig)](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig)
 [![Tests](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml/badge.svg)](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
@@ -8,7 +10,7 @@
 
 A zero-dependency Manifest V3 extension for Chrome 145+ that turns one clear privacy preference into a small, auditable browser signal: Global Privacy Control, explicit top-level site exceptions, and Chrome Topics opt-out.
 
-Let's GPC is not yet published in the Chrome Web Store. Download the latest package from [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases), or load the source directory directly.
+[Install Let's GPC from the Chrome Web Store](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig). Versioned packages remain available from [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases), and the source directory can also be loaded directly for development.
 
 ## What is GPC?
 
@@ -63,7 +65,11 @@ The release ZIP stays below 50 KB, enforced by the packaging script and tests.
 
 There are no npm runtime dependencies, bundlers, source maps, remote code, telemetry, ads, or remote configuration. Chrome executes the single declarative network rule itself. The event-driven service worker does not subscribe to `webRequest`, `webNavigation`, or response events; it wakes only for installation, startup, setting changes, top-level URL changes, and UI messages.
 
-## Install locally
+## Install
+
+For regular use, [add Let's GPC from the Chrome Web Store](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig) to receive automatic updates.
+
+### Install locally
 
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.

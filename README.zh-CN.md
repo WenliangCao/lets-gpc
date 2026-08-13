@@ -1,6 +1,8 @@
 # Let's GPC
 
 [![Release](https://img.shields.io/github/v/release/WenliangCao/lets-gpc)](https://github.com/WenliangCao/lets-gpc/releases)
+[![Chrome 应用商店](https://img.shields.io/chrome-web-store/v/ckmmgmllopcmflfebjhgnchodkdakdig?label=Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig?hl=zh-CN)
+[![Chrome 应用商店用户数](https://img.shields.io/chrome-web-store/users/ckmmgmllopcmflfebjhgnchodkdakdig)](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig?hl=zh-CN)
 [![Tests](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml/badge.svg)](https://github.com/WenliangCao/lets-gpc/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
@@ -8,7 +10,7 @@
 
 一个面向 Chrome 145+ 的零依赖 Manifest V3 扩展：把一个清晰的隐私偏好转换成小巧、可审计的浏览器信号——Global Privacy Control、明确的顶层站点例外，以及 Chrome Topics 退出。
 
-Let's GPC 尚未发布到 Chrome Web Store。你可以从 [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases) 下载最新安装包，或直接加载源码目录。
+[从 Chrome 应用商店安装 Let's GPC](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig?hl=zh-CN)。带版本号的安装包仍可从 [GitHub Releases](https://github.com/WenliangCao/lets-gpc/releases) 下载；开发时也可以直接加载源码目录。
 
 ## 什么是 GPC？
 
@@ -63,7 +65,11 @@ Release ZIP 保持在 50 KB 以内，并由打包脚本和测试强制检查。
 
 项目没有 npm 运行时依赖、构建器、source map、远程代码、遥测、广告或远程配置。Chrome 自己执行唯一一条声明式网络规则。事件型 service worker 不监听 `webRequest`、`webNavigation` 或响应事件；仅在安装、启动、设置变更、顶层 URL 变化和 UI 消息时唤醒。
 
-## 本地安装
+## 安装
+
+日常使用建议直接[从 Chrome 应用商店添加 Let's GPC](https://chromewebstore.google.com/detail/lets-gpc/ckmmgmllopcmflfebjhgnchodkdakdig?hl=zh-CN)，以便自动接收更新。
+
+### 本地安装
 
 1. 打开 `chrome://extensions`。
 2. 打开**开发者模式**。
