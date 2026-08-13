@@ -68,7 +68,7 @@ There are no npm runtime dependencies, bundlers, source maps, remote code, telem
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
 3. Select **Load unpacked**.
-4. For a source install, select this repository's `extension` directory. For a release install, extract `lets-gpc.zip` and select the extracted directory.
+4. For a source install, select this repository's `extension` directory. For a release install, extract the versioned archive (for example, `lets-gpc-v0.1.3.zip`) and select the extracted directory.
 
 Chrome 145 is the minimum version because site exceptions rely on `excludedTopDomains`, introduced in that version.
 

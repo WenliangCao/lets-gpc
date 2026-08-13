@@ -3,13 +3,14 @@ set -eu
 
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 output_dir="$project_dir/dist"
-archive="$output_dir/lets-gpc.zip"
+version=$(cd "$project_dir" && node -p "require('./package.json').version")
+archive="$output_dir/lets-gpc-v${version}.zip"
 stage_dir=$(mktemp -d "${TMPDIR:-/tmp}/lets-gpc-stage.XXXXXX")
 verify_dir=$(mktemp -d "${TMPDIR:-/tmp}/lets-gpc-package.XXXXXX")
 trap 'rm -rf "$stage_dir" "$verify_dir"' EXIT HUP INT TERM
 
 mkdir -p "$output_dir"
-rm -f "$archive"
+rm -f "$output_dir/lets-gpc.zip" "$archive"
 cp -R "$project_dir/extension/." "$stage_dir/"
 cp "$project_dir/LICENSE" "$project_dir/NOTICE" "$stage_dir/"
 find "$stage_dir" -exec touch -t 198001010000 {} +

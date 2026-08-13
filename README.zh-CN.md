@@ -68,7 +68,7 @@ Release ZIP 保持在 50 KB 以内，并由打包脚本和测试强制检查。
 1. 打开 `chrome://extensions`。
 2. 打开**开发者模式**。
 3. 选择**加载已解压的扩展程序**。
-4. 源码安装请选择仓库的 `extension` 目录；Release 安装请先解压 `lets-gpc.zip`，再选择解压后的目录。
+4. 源码安装请选择仓库的 `extension` 目录；Release 安装请先解压带版本号的压缩包（例如 `lets-gpc-v0.1.3.zip`），再选择解压后的目录。
 
 Chrome 145 是最低版本，因为站点例外依赖该版本引入的 `excludedTopDomains`。
 
