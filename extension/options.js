@@ -3,7 +3,6 @@ import {
   disabledByHost,
   isHostDisabled,
   normalizeHost,
-  normalizeSettings,
 } from "./core.js";
 import {
   applyTheme,
@@ -41,6 +40,7 @@ const MAX_RENDERED_DOMAINS = 500;
 let state;
 let domains = [];
 let noticeTimer;
+let searchTimer;
 
 void initialize().catch(showError);
 
@@ -63,7 +63,10 @@ elements.theme.addEventListener("click", async () => {
   });
 });
 
-elements.search.addEventListener("input", renderDomains);
+elements.search.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(renderDomains, 100);
+});
 
 elements.export.addEventListener("click", async () => {
   setBusy(true);
@@ -90,7 +93,6 @@ elements.export.addEventListener("click", async () => {
     showError(error);
   } finally {
     setBusy(false);
-    render();
   }
 });
 
@@ -197,12 +199,12 @@ async function mutate(message) {
     return false;
   } finally {
     setBusy(false);
-    render();
+    if (state) elements["topics-toggle"].disabled = !state.settings.enabled;
   }
 }
 
 function render() {
-  const settings = normalizeSettings(state.settings);
+  const settings = state.settings;
   elements["global-toggle"].checked = settings.enabled;
   elements["topics-toggle"].checked = settings.blockTopics;
   elements["topics-toggle"].disabled = !settings.enabled;
@@ -287,7 +289,13 @@ function flagsLabel(flags) {
 
 function setBusy(busy) {
   for (const control of document.querySelectorAll("button, input")) {
-    control.disabled = busy;
+    if (busy) {
+      control.dataset.disabledBeforeBusy = String(control.disabled);
+      control.disabled = true;
+    } else if (Object.hasOwn(control.dataset, "disabledBeforeBusy")) {
+      control.disabled = control.dataset.disabledBeforeBusy === "true";
+      delete control.dataset.disabledBeforeBusy;
+    }
   }
 }
 

@@ -121,15 +121,14 @@ export function disabledByHost(host, disabledHosts) {
 }
 
 export function buildGpcRule(settingsValue) {
-  const settings = normalizeSettings(settingsValue);
+  const settings = settingsValue || DEFAULT_SETTINGS;
   if (!settings.enabled) return null;
 
   const condition = {
-    regexFilter: "^(?:https?|wss?)://",
     resourceTypes: [...RESOURCE_TYPES],
   };
 
-  if (settings.disabledHosts.length) {
+  if (settings.disabledHosts?.length) {
     condition.excludedTopDomains = [...settings.disabledHosts];
   }
 
@@ -151,7 +150,7 @@ export function buildGpcRule(settingsValue) {
 }
 
 export function buildContentScript(settingsValue) {
-  const settings = normalizeSettings(settingsValue);
+  const settings = settingsValue || DEFAULT_SETTINGS;
   if (!settings.enabled) return null;
 
   const script = {
@@ -159,7 +158,7 @@ export function buildContentScript(settingsValue) {
     js: ["gpc.js"],
     matches: [...HTTP_MATCHES],
     allFrames: false,
-    excludeMatches: settings.disabledHosts.map(hostToMatchPattern),
+    excludeMatches: (settings.disabledHosts || []).map(hostToMatchPattern),
     persistAcrossSessions: true,
     runAt: "document_start",
     world: "MAIN",

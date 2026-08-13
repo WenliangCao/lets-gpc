@@ -33,7 +33,7 @@ const EXPECTED_RUNTIME_FILES = [
 test("manifest has the intentional minimum permission surface", async () => {
   const manifest = JSON.parse(await readFile(path.join(extension, "manifest.json"), "utf8"));
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.version, "0.1.2");
+  assert.equal(manifest.version, "0.1.3");
   assert.equal(manifest.default_locale, "en");
   assert.equal(manifest.name, "__MSG_extensionName__");
   assert.equal(manifest.description, "__MSG_extensionDescription__");

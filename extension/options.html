@@ -11,10 +11,7 @@
     <header class="page-header">
       <div class="brand">
         <img src="icons/icon-48.png" width="38" height="38" alt="">
-        <div>
-          <h1>Let's GPC</h1>
-          <p data-i18n="tagline">Do less. Get the core signal right.</p>
-        </div>
+        <h1>Let's GPC</h1>
       </div>
       <button id="theme" class="button" type="button">Theme: System</button>
     </header>
@@ -72,15 +69,7 @@
         <p id="empty" class="empty muted" data-i18n="noDomains">No domains recorded yet.</p>
       </section>
 
-      <section class="panel facts">
-        <h2 data-i18n="boundariesPrivacy">Boundaries and privacy</h2>
-        <ul>
-          <li data-i18n="privacyFactNoTelemetry">No telemetry, remote configuration, ads, or third-party runtime dependencies.</li>
-          <li data-i18n="privacyFactHistory">Domain history stays in Chrome local storage. Existing resource timing entries are read only when the popup opens.</li>
-          <li data-i18n="privacyFactWellKnown">/.well-known/gpc.json is checked on demand only when the popup opens. It is a support declaration, not proof of compliance.</li>
-          <li data-i18n="privacyFactWorker">Chrome extensions cannot inject WorkerNavigator.globalPrivacyControl into Web Workers. The browser network stack still adds the request header.</li>
-        </ul>
-      </section>
+      <p class="privacy-link"><a href="https://wenliangcao.github.io/lets-gpc/" target="_blank" rel="noreferrer" data-i18n="privacyPolicy">Privacy policy</a></p>
 
       <p id="notice" class="notice" role="status" hidden></p>
       <p id="error" class="notice error" role="alert" hidden></p>

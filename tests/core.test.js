@@ -64,10 +64,10 @@ test("disabled parent domains cover their subdomains, never siblings", () => {
 });
 
 test("one DNR rule sets only Sec-GPC and excludes whole top-level sites", () => {
-  const rule = buildGpcRule({
+  const rule = buildGpcRule(normalizeSettings({
     enabled: true,
     disabledHosts: ["example.com"],
-  });
+  }));
 
   assert.equal(rule.id, 1);
   assert.deepEqual(rule.action.requestHeaders, [{
@@ -76,17 +76,18 @@ test("one DNR rule sets only Sec-GPC and excludes whole top-level sites", () => 
     value: "1",
   }]);
   assert.equal("responseHeaders" in rule.action, false);
-  assert.equal(rule.condition.regexFilter, "^(?:https?|wss?)://");
+  assert.equal("regexFilter" in rule.condition, false);
+  assert.equal("urlFilter" in rule.condition, false);
   assert.equal("excludedRequestDomains" in rule.condition, false);
   assert.deepEqual(rule.condition.excludedTopDomains, ["example.com"]);
   assert.equal(buildGpcRule({ enabled: false }), null);
 });
 
 test("MAIN-world script is registered only when enabled", () => {
-  const script = buildContentScript({
+  const script = buildContentScript(normalizeSettings({
     enabled: true,
     disabledHosts: ["example.com", "127.0.0.1"],
-  });
+  }));
   assert.equal(script.world, "MAIN");
   assert.equal(script.runAt, "document_start");
   assert.equal(script.allFrames, false);

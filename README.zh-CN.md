@@ -59,7 +59,7 @@ GPC 不是广告拦截器、Cookie 清理器、同意弹窗自动点击器，也
 
 ## 体积与运行模型
 
-未压缩 Release 为 110,156 B，Release ZIP 为 47,303 B；运行时文本为 83,136 B，打包文件共 20 个，其中包含两种语言和 Apache 许可证声明。
+Release ZIP 保持在 50 KB 以内，并由打包脚本和测试强制检查。
 
 项目没有 npm 运行时依赖、构建器、source map、远程代码、遥测、广告或远程配置。Chrome 自己执行唯一一条声明式网络规则。事件型 service worker 不监听 `webRequest`、`webNavigation` 或响应事件；仅在安装、启动、设置变更、顶层 URL 变化和 UI 消息时唤醒。
 
@@ -81,7 +81,7 @@ npm test
 npm run package
 ```
 
-测试包含纯函数、manifest 检查和真实 Chrome 集成测试，覆盖导航与子资源请求头、页面最早可见的 API 值、顶层站点例外语义、Topics 设置与清除、WebSocket 和 Worker 请求、IPv4/IPv6/localhost、并发设置变更、严格导入、实时导出快照、popup 控件、500 行渲染上限、打包内容、双语键一致性和无远程代码检查。
+测试包含纯函数、manifest 检查和真实 Chrome 集成测试，覆盖网络信号、页面 API、站点例外、Topics 控制、存储流程、本地化界面和 Release 包约束。
 
 可用 `CHROME_BINARY` 指定 Chrome/Chromium 路径；设置 `UI_SCREENSHOT_DIR` 可在集成测试中保存真实渲染的 popup 和 options 截图。
 

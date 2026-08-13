@@ -32,6 +32,7 @@ const elements = Object.fromEntries(
     "reload",
     "topics-toggle",
     "topics-detail",
+    "resource-details",
     "resource-count",
     "resource-list",
     "support-status",
@@ -79,6 +80,10 @@ elements.reload.addEventListener("click", () => {
 
 elements.options.addEventListener("click", () => {
   void chrome.runtime.openOptionsPage();
+});
+
+elements["resource-details"].addEventListener("toggle", () => {
+  if (elements["resource-details"].open) renderResourceList();
 });
 
 async function initialize() {
@@ -141,7 +146,6 @@ async function inspectSupport(urlValue) {
 
   try {
     const response = await fetch(`${origin}/.well-known/gpc.json`, {
-      cache: "no-store",
       credentials: "omit",
       headers: { Accept: "application/json" },
       redirect: "error",
@@ -171,13 +175,10 @@ async function mutate(message) {
     await sendMessage(message);
     state = await sendMessage({ type: "get-state", url: activeTab?.url });
     applyTheme(state.settings.theme);
-    render();
-    renderPageSnapshot();
     return true;
   } catch (error) {
     showError(error);
     state = await sendMessage({ type: "get-state", url: activeTab?.url });
-    render();
     return false;
   } finally {
     setBusy(false);
@@ -262,6 +263,11 @@ function renderPageSnapshot() {
   setPill(elements["dom-status"], label, visible);
 
   elements["resource-count"].textContent = String(pageSnapshot.hosts.length);
+  if (elements["resource-details"].open) renderResourceList();
+}
+
+function renderResourceList() {
+  if (!pageSnapshot) return;
   elements["resource-list"].replaceChildren(
     ...pageSnapshot.hosts.map(resourceRow),
   );
@@ -326,7 +332,7 @@ function renderSupport(result) {
   elements["support-status"].textContent = labels[result.kind];
   elements["support-date"].textContent = result.lastUpdate
     ? msg("supportUpdated", result.lastUpdate)
-    : msg("supportNotCompliance");
+    : "";
 }
 
 function setPill(element, text, on) {
@@ -340,7 +346,13 @@ function markReloadRequired() {
 
 function setBusy(busy) {
   for (const control of document.querySelectorAll("button, input")) {
-    control.disabled = busy;
+    if (busy) {
+      control.dataset.disabledBeforeBusy = String(control.disabled);
+      control.disabled = true;
+    } else if (Object.hasOwn(control.dataset, "disabledBeforeBusy")) {
+      control.disabled = control.dataset.disabledBeforeBusy === "true";
+      delete control.dataset.disabledBeforeBusy;
+    }
   }
 }
 

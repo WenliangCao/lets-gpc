@@ -39,7 +39,6 @@ h2 {
   margin-bottom: 5px;
 }
 
-.brand p,
 .setting p,
 .section-title p {
   color: var(--muted);
@@ -176,14 +175,9 @@ code {
   text-align: center;
 }
 
-.facts ul {
-  color: var(--muted);
+.privacy-link {
   margin: 0;
-  padding-left: 20px;
-}
-
-.facts li + li {
-  margin-top: 6px;
+  text-align: center;
 }
 
 .notice {

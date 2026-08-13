@@ -41,13 +41,15 @@ export function themeLabel(theme) {
   }[theme] || msg("themeSystem");
 }
 
+const DATE_FORMATTER = new Intl.DateTimeFormat(
+  msg("@@ui_locale").replaceAll("_", "-"),
+  { dateStyle: "medium", timeStyle: "short" },
+);
+
 export function formatDate(timestamp) {
   if (!Number.isFinite(timestamp)) return msg("unknown");
   try {
-    return new Intl.DateTimeFormat(msg("@@ui_locale").replaceAll("_", "-"), {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(timestamp);
+    return DATE_FORMATTER.format(timestamp);
   } catch {
     return msg("unknown");
   }

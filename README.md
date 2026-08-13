@@ -59,7 +59,7 @@ The project is intentionally focused on the signal itself. It does not build a l
 
 ## Size and runtime model
 
-The unpacked release is 110,156 B and the release ZIP is 47,303 B. Runtime text is 83,136 B across 20 packaged files, including both locales and the Apache license notices.
+The release ZIP stays below 50 KB, enforced by the packaging script and tests.
 
 There are no npm runtime dependencies, bundlers, source maps, remote code, telemetry, ads, or remote configuration. Chrome executes the single declarative network rule itself. The event-driven service worker does not subscribe to `webRequest`, `webNavigation`, or response events; it wakes only for installation, startup, setting changes, top-level URL changes, and UI messages.
 
@@ -81,7 +81,7 @@ npm test
 npm run package
 ```
 
-The test suite combines pure-function and manifest checks with a real-Chrome integration test. It verifies navigation and subresource headers, the earliest page-visible API value, top-level exception semantics, Topics set/clear behavior, WebSocket and Worker requests, IPv4/IPv6/localhost handling, concurrent mutations, strict import, live export snapshots, popup controls, the 500-row render cap, package contents, localization parity, and the absence of remote code.
+The test suite combines pure-function and manifest checks with a real-Chrome integration test covering the network signal, page API, site exceptions, Topics controls, storage workflows, localized UI, and release-package constraints.
 
 Set `CHROME_BINARY` to use a specific Chrome/Chromium executable. Set `UI_SCREENSHOT_DIR` to save real rendered popup and options screenshots during the integration test.
 

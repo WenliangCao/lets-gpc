@@ -64,7 +64,7 @@
 
         <section class="card row">
           <div>
-            <strong>Chrome Topics</strong>
+            <strong data-i18n="blockTopicsTitle">Block Chrome Topics</strong>
             <p id="topics-detail" data-i18n="topicsDefaultDetail">Disabled at browser level without rewriting site responses</p>
           </div>
           <label class="switch" aria-label="Block Chrome Topics" data-i18n-aria-label="blockChromeTopics">
@@ -73,7 +73,7 @@
           </label>
         </section>
 
-        <details class="card resource-card">
+        <details id="resource-details" class="card resource-card">
           <summary>
             <span data-i18n="resourceDomainsTitle">Resource domains found on this page</span>
             <span id="resource-count" class="status-pill">0</span>
@@ -96,7 +96,6 @@
 
     <footer>
       <button id="options" class="button" type="button" data-i18n="openOptions">Domain list and settings</button>
-      <span class="muted" data-i18n="localZeroDependency">Zero dependencies · Local storage</span>
     </footer>
 
     <script type="module" src="popup.js"></script>

@@ -19,7 +19,9 @@ import {
 
 const TOP_LEVEL = 1;
 const RESOURCE = 2;
+const DOMAIN_RECORD_TTL_MS = 5 * 60 * 1_000;
 let mutationQueue = Promise.resolve();
+let settingsCache;
 
 chrome.runtime.onInstalled.addListener(() => {
   void enqueueMutation(installOrUpgrade).catch(reportError);
@@ -31,13 +33,8 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!changeInfo.url) return;
-  if (!tab.incognito) {
-    void recordHosts([
-      { host: hostFromUrl(changeInfo.url), flags: TOP_LEVEL },
-    ]).catch(reportError);
-  }
   void enqueueMutation(
-    () => updateBadge(tabId, changeInfo.url || tab.url),
+    () => handleNavigation(tabId, changeInfo.url, tab.incognito),
   ).catch(reportError);
 });
 
@@ -52,10 +49,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 async function installOrUpgrade() {
   const stored = await chrome.storage.local.get(null);
   const settings = normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  settingsCache = settings;
   const repair = planDomainRepair(stored, settings);
   if (repair.remove.length) await chrome.storage.local.remove(repair.remove);
   await chrome.storage.local.set(repair.update);
   await lockStorageToExtension();
+  await chrome.action.setBadgeBackgroundColor({ color: "#16845b" });
   await reconcile(settings);
   await refreshBadges(settings);
 }
@@ -101,8 +100,10 @@ async function handleMessage(message) {
 }
 
 async function getSettings() {
+  if (settingsCache) return settingsCache;
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
-  return normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  settingsCache = normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  return settingsCache;
 }
 
 async function getState(url) {
@@ -135,7 +136,8 @@ async function getState(url) {
 
 async function getExportData() {
   const stored = await chrome.storage.local.get(null);
-  const settings = normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  settingsCache ||= normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  const settings = settingsCache;
   const domains = [];
 
   for (const [key, value] of Object.entries(stored)) {
@@ -164,6 +166,7 @@ async function updateSettingsNow(mutator, effects = {}) {
   const previous = await getSettings();
   const next = normalizeSettings(mutator(previous));
   await chrome.storage.local.set({ [SETTINGS_KEY]: next });
+  settingsCache = next;
 
   try {
     if (effects.signals) await reconcileSignals(next);
@@ -172,6 +175,7 @@ async function updateSettingsNow(mutator, effects = {}) {
     return next;
   } catch (error) {
     await chrome.storage.local.set({ [SETTINGS_KEY]: previous });
+    settingsCache = previous;
     if (effects.signals) await reconcileSignals(previous);
     if (effects.topics) await applyTopics(previous);
     if (effects.badges) await refreshBadges(previous);
@@ -222,7 +226,7 @@ async function setHostEnabledNow(host, enabled) {
 }
 
 async function reconcile(settingsValue) {
-  const settings = normalizeSettings(settingsValue || await getSettings());
+  const settings = settingsValue || await getSettings();
   await reconcileSignals(settings);
   await applyTopics(settings);
 }
@@ -263,41 +267,74 @@ async function applyTopics(settings) {
   }
 }
 
-function recordHosts(entries) {
-  const normalized = entries
+function normalizeHostEntries(entries) {
+  return entries
     .map(({ host, flags }) => ({ host: normalizeHost(host), flags }))
     .filter(({ host, flags }) => (
       host && Number.isInteger(flags) && flags > 0 && flags <= 3
     ));
+}
 
+function recordHosts(entries) {
+  const normalized = normalizeHostEntries(entries);
   if (!normalized.length) return Promise.resolve(0);
+  return enqueueMutation(() => recordHostsNow(normalized));
+}
 
-  return enqueueMutation(async () => {
-    const keys = [...new Set(normalized.map(({ host }) => domainStorageKey(host)))];
-    const stored = await chrome.storage.local.get([...keys, DOMAIN_COUNT_KEY]);
-    let domainCount = Number.isInteger(stored[DOMAIN_COUNT_KEY])
-      ? Math.max(0, stored[DOMAIN_COUNT_KEY])
-      : 0;
-    const now = Date.now();
-    const updates = {};
-    let added = 0;
-
-    for (const { host, flags } of normalized) {
-      const key = domainStorageKey(host);
-      const current = updates[key] || (Array.isArray(stored[key]) ? stored[key] : null);
-      if (!current) {
-        if (domainCount >= MAX_DOMAINS) continue;
-        domainCount += 1;
-        added += 1;
-      }
-      updates[key] = [now, (current?.[1] || 0) | flags];
+async function handleNavigation(tabId, url, incognito) {
+  if (!incognito) {
+    const normalized = normalizeHostEntries([
+      { host: hostFromUrl(url), flags: TOP_LEVEL },
+    ]);
+    if (normalized.length) {
+      await recordHostsNow(normalized, { loadSettings: true });
     }
+  }
+  await updateBadge(tabId, url, settingsCache || await getSettings());
+}
 
-    if (added) updates[DOMAIN_COUNT_KEY] = domainCount;
-    if (!Object.keys(updates).length) return 0;
-    await chrome.storage.local.set(updates);
-    return Object.keys(updates).filter((key) => key.startsWith(DOMAIN_KEY_PREFIX)).length;
-  });
+async function recordHostsNow(normalized, { loadSettings = false } = {}) {
+  const keys = [...new Set(normalized.map(
+    ({ host }) => `${DOMAIN_KEY_PREFIX}${host}`,
+  ))];
+  const requestedKeys = [...keys, DOMAIN_COUNT_KEY];
+  if (loadSettings && !settingsCache) requestedKeys.push(SETTINGS_KEY);
+  const stored = await chrome.storage.local.get(requestedKeys);
+  if (loadSettings && !settingsCache) {
+    settingsCache = normalizeSettings(stored[SETTINGS_KEY] || DEFAULT_SETTINGS);
+  }
+
+  let domainCount = Number.isInteger(stored[DOMAIN_COUNT_KEY])
+    ? Math.max(0, stored[DOMAIN_COUNT_KEY])
+    : 0;
+  const now = Date.now();
+  const updates = {};
+  let added = 0;
+
+  for (const { host, flags } of normalized) {
+    const key = `${DOMAIN_KEY_PREFIX}${host}`;
+    const current = updates[key] || (Array.isArray(stored[key]) ? stored[key] : null);
+    if (!current) {
+      if (domainCount >= MAX_DOMAINS) continue;
+      domainCount += 1;
+      added += 1;
+    }
+    const nextFlags = (current?.[1] || 0) | flags;
+    if (
+      current
+      && nextFlags === current[1]
+      && current[0] <= now
+      && now - current[0] < DOMAIN_RECORD_TTL_MS
+    ) {
+      continue;
+    }
+    updates[key] = [now, nextFlags];
+  }
+
+  if (added) updates[DOMAIN_COUNT_KEY] = domainCount;
+  if (!Object.keys(updates).length) return 0;
+  await chrome.storage.local.set(updates);
+  return Object.keys(updates).filter((key) => key.startsWith(DOMAIN_KEY_PREFIX)).length;
 }
 
 function clearDomains() {
@@ -369,6 +406,7 @@ async function importDataNow(imported) {
   const nextKeySet = new Set(nextKeys);
   try {
     await chrome.storage.local.set(updates);
+    settingsCache = imported.settings;
     await reconcile(imported.settings);
     const obsolete = previousKeys.filter((key) => !nextKeySet.has(key));
     if (obsolete.length) await chrome.storage.local.remove(obsolete);
@@ -383,6 +421,7 @@ async function importDataNow(imported) {
       : previousKeys.length;
     for (const key of previousKeys) restore[key] = previous[key];
     await chrome.storage.local.set(restore);
+    settingsCache = previousSettings;
     await reconcile(previousSettings);
     throw error;
   }
@@ -412,10 +451,6 @@ async function updateBadge(tabId, url, settingsValue) {
   );
 
   await Promise.all([
-    chrome.action.setBadgeBackgroundColor({
-      tabId,
-      color: active ? "#16845b" : "#6b7280",
-    }),
     chrome.action.setBadgeText({ tabId, text: active ? "1" : "" }),
     chrome.action.setTitle({
       tabId,
