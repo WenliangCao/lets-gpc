@@ -1,0 +1,205 @@
+name: Publish to Chrome Web Store
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: chrome-web-store
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    name: Verify and submit release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: chrome-web-store
+    env:
+      CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+      CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - name: Validate configuration
+        run: |
+          test -n "$CWS_EXTENSION_ID"
+          test -n "$CWS_PUBLISHER_ID"
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 600s
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+
+      - name: Fetch Chrome Web Store status
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://chromewebstore.googleapis.com/v2/publishers/${CWS_PUBLISHER_ID}/items/${CWS_EXTENSION_ID}:fetchStatus" \
+            | tee cws-status-before.json
+
+      - name: Verify release package
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -eu
+          case "$RELEASE_TAG" in
+            v[0-9]*) ;;
+            *) echo "Release tag must start with v followed by a version: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+
+          version=${RELEASE_TAG#v}
+          archive="lets-gpc-${RELEASE_TAG}.zip"
+          package_version=$(node -p "require('./package.json').version")
+          manifest_version=$(node -p "require('./extension/manifest.json').version")
+
+          test "$version" = "$package_version"
+          test "$version" = "$manifest_version"
+          npm test
+
+          gh release download "$RELEASE_TAG" --pattern "$archive"
+          unzip -tq "$archive"
+
+          expected_digest=$(gh release view "$RELEASE_TAG" --json assets \
+            --jq ".assets[] | select(.name == \"$archive\") | .digest")
+          actual_digest="sha256:$(sha256sum "$archive" | cut -d ' ' -f 1)"
+          test -n "$expected_digest"
+          test "$actual_digest" = "$expected_digest"
+
+          verify_dir=$(mktemp -d)
+          trap 'rm -rf "$verify_dir"' EXIT
+          unzip -q "$archive" -d "$verify_dir"
+          PACKAGE_EXTENSION_DIR="$verify_dir" node --test tests/manifest.test.js
+
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "RELEASE_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Check for an existing submission
+        if: github.event_name == 'release'
+        id: existing
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs";
+
+          const version = process.env.RELEASE_VERSION;
+          const status = JSON.parse(readFileSync("cws-status-before.json", "utf8"));
+          const published = status.publishedItemRevisionStatus;
+          const submitted = status.submittedItemRevisionStatus;
+          const hasVersion = (revision) => revision?.distributionChannels?.some(
+            (channel) => channel.crxVersion === version
+          );
+
+          if (hasVersion(published)) {
+            appendFileSync(process.env.GITHUB_OUTPUT, "skip=true\nreason=already published\n");
+          } else if (hasVersion(submitted)) {
+            if (["REJECTED", "CANCELLED"].includes(submitted.state)) {
+              throw new Error(`Chrome Web Store version ${version} is ${submitted.state}; publish a corrected higher version`);
+            }
+            appendFileSync(process.env.GITHUB_OUTPUT, `skip=true\nreason=already submitted (${submitted.state})\n`);
+          } else if (submitted) {
+            const submittedVersions = submitted.distributionChannels
+              ?.map((channel) => channel.crxVersion)
+              .filter(Boolean)
+              .join(", ") || "unknown";
+            throw new Error(`Another Chrome Web Store version is already submitted: ${submittedVersions} (${submitted.state})`);
+          } else {
+            appendFileSync(process.env.GITHUB_OUTPUT, "skip=false\nreason=new version\n");
+          }
+          NODE
+
+      - name: Upload release package
+        if: github.event_name == 'release' && steps.existing.outputs.skip != 'true'
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -X POST \
+            -T "$RELEASE_ARCHIVE" \
+            "https://chromewebstore.googleapis.com/upload/v2/publishers/${CWS_PUBLISHER_ID}/items/${CWS_EXTENSION_ID}:upload" \
+            | tee cws-upload.json
+
+          upload_state=$(jq -r '.uploadState // empty' cws-upload.json)
+          attempts=0
+          while [ "$upload_state" = "IN_PROGRESS" ] && [ "$attempts" -lt 12 ]; do
+            attempts=$((attempts + 1))
+            sleep 5
+            curl --fail-with-body --show-error --silent \
+              -H "Authorization: Bearer $ACCESS_TOKEN" \
+              "https://chromewebstore.googleapis.com/v2/publishers/${CWS_PUBLISHER_ID}/items/${CWS_EXTENSION_ID}:fetchStatus" \
+              > cws-upload-status.json
+            upload_state=$(jq -r '.lastAsyncUploadState // empty' cws-upload-status.json)
+          done
+          test "$upload_state" = "SUCCEEDED"
+
+      - name: Submit for review and automatic publishing
+        if: github.event_name == 'release' && steps.existing.outputs.skip != 'true'
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"publishType":"DEFAULT_PUBLISH","blockOnWarnings":true}' \
+            "https://chromewebstore.googleapis.com/v2/publishers/${CWS_PUBLISHER_ID}/items/${CWS_EXTENSION_ID}:publish" \
+            | tee cws-submit.json
+
+      - name: Fetch final status
+        if: always() && steps.auth.outcome == 'success'
+        continue-on-error: true
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://chromewebstore.googleapis.com/v2/publishers/${CWS_PUBLISHER_ID}/items/${CWS_EXTENSION_ID}:fetchStatus" \
+            | tee cws-status-after.json
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## Chrome Web Store"
+            echo
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "Authentication and status check only. No package was uploaded."
+            else
+              echo "- Release: \`${{ github.event.release.tag_name }}\`"
+              echo "- Decision: \`${{ steps.existing.outputs.reason }}\`"
+            fi
+            for file in cws-status-before.json cws-upload.json cws-submit.json cws-status-after.json; do
+              if [ -f "$file" ]; then
+                echo
+                echo "### $file"
+                echo
+                echo '```json'
+                jq . "$file"
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
